@@ -1,6 +1,8 @@
-from iqoptionapi.stable_api import IQ_Option
-import os 
+import os
+
 from dotenv import load_dotenv
+
+from iqoptionapi.stable_api import IQ_Option
 
 
 def load_env():
@@ -14,3 +16,4 @@ print(email, senha)
 
 
 API = IQ_Option(email, senha)
+#API = IQ_Option(email, senha)

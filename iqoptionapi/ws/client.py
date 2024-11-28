@@ -2,63 +2,76 @@
 
 import json
 import logging
+from threading import Thread
+
 import websocket
+
 import iqoptionapi.constants as OP_code
 import iqoptionapi.global_value as global_value
-from threading import Thread
-from iqoptionapi.ws.received.technical_indicators import technical_indicators
-from iqoptionapi.ws.received.time_sync import time_sync
-from iqoptionapi.ws.received.heartbeat import heartbeat
-from iqoptionapi.ws.received.balances import balances
-from iqoptionapi.ws.received.profile import profile
+from iqoptionapi.ws.received.api_game_betinfo_result import \
+    api_game_betinfo_result
+from iqoptionapi.ws.received.api_game_getoptions_result import \
+    api_game_getoptions_result
+from iqoptionapi.ws.received.api_option_init_all_result import \
+    api_option_init_all_result
+from iqoptionapi.ws.received.auto_margin_call_changed import \
+    auto_margin_call_changed
+from iqoptionapi.ws.received.available_leverages import available_leverages
 from iqoptionapi.ws.received.balance_changed import balance_changed
-from iqoptionapi.ws.received.candles import candles
+from iqoptionapi.ws.received.balances import balances
 from iqoptionapi.ws.received.buy_complete import buy_complete
-from iqoptionapi.ws.received.option import option
-from iqoptionapi.ws.received.position_history import position_history
-from iqoptionapi.ws.received.list_info_data import list_info_data
 from iqoptionapi.ws.received.candle_generated import candle_generated_realtime
 from iqoptionapi.ws.received.candle_generated_v2 import candle_generated_v2
+from iqoptionapi.ws.received.candles import candles
+from iqoptionapi.ws.received.client_price_generated import \
+    client_price_generated
 from iqoptionapi.ws.received.commission_changed import commission_changed
-from iqoptionapi.ws.received.socket_option_opened import socket_option_opened
-from iqoptionapi.ws.received.api_option_init_all_result import api_option_init_all_result
-from iqoptionapi.ws.received.initialization_data import initialization_data
-from iqoptionapi.ws.received.underlying_list import underlying_list
-from iqoptionapi.ws.received.instruments import instruments
-from iqoptionapi.ws.received.financial_information import financial_information
-from iqoptionapi.ws.received.position_changed import position_changed
-from iqoptionapi.ws.received.option_opened import option_opened
-from iqoptionapi.ws.received.option_closed import option_closed
-from iqoptionapi.ws.received.top_assets_updated import top_assets_updated
-from iqoptionapi.ws.received.strike_list import strike_list
-from iqoptionapi.ws.received.api_game_betinfo_result import api_game_betinfo_result
-from iqoptionapi.ws.received.traders_mood_changed import traders_mood_changed
-from iqoptionapi.ws.received.order import order
-from iqoptionapi.ws.received.position import position
-from iqoptionapi.ws.received.positions import positions
-from iqoptionapi.ws.received.order_placed_temp import order_placed_temp
 from iqoptionapi.ws.received.deferred_orders import deferred_orders
-from iqoptionapi.ws.received.history_positions import history_positions
-from iqoptionapi.ws.received.available_leverages import available_leverages
-from iqoptionapi.ws.received.order_canceled import order_canceled
-from iqoptionapi.ws.received.position_closed import position_closed
-from iqoptionapi.ws.received.overnight_fee import overnight_fee
-from iqoptionapi.ws.received.api_game_getoptions_result import api_game_getoptions_result
-from iqoptionapi.ws.received.sold_options import sold_options
-from iqoptionapi.ws.received.tpsl_changed import tpsl_changed
-from iqoptionapi.ws.received.auto_margin_call_changed import auto_margin_call_changed
 from iqoptionapi.ws.received.digital_option_placed import digital_option_placed
-from iqoptionapi.ws.received.result import result
-from iqoptionapi.ws.received.instrument_quotes_generated import instrument_quotes_generated
-from iqoptionapi.ws.received.training_balance_reset import training_balance_reset
-from iqoptionapi.ws.received.socket_option_closed import socket_option_closed
-from iqoptionapi.ws.received.live_deal_binary_option_placed import live_deal_binary_option_placed
-from iqoptionapi.ws.received.live_deal_digital_option import live_deal_digital_option
-from iqoptionapi.ws.received.leaderboard_deals_client import leaderboard_deals_client
+from iqoptionapi.ws.received.financial_information import financial_information
+from iqoptionapi.ws.received.heartbeat import heartbeat
+from iqoptionapi.ws.received.history_positions import history_positions
+from iqoptionapi.ws.received.initialization_data import initialization_data
+from iqoptionapi.ws.received.instrument_quotes_generated import \
+    instrument_quotes_generated
+from iqoptionapi.ws.received.instruments import instruments
+from iqoptionapi.ws.received.leaderboard_deals_client import \
+    leaderboard_deals_client
+from iqoptionapi.ws.received.leaderboard_userinfo_deals_client import \
+    leaderboard_userinfo_deals_client
+from iqoptionapi.ws.received.list_info_data import list_info_data
 from iqoptionapi.ws.received.live_deal import live_deal
+from iqoptionapi.ws.received.live_deal_binary_option_placed import \
+    live_deal_binary_option_placed
+from iqoptionapi.ws.received.live_deal_digital_option import \
+    live_deal_digital_option
+from iqoptionapi.ws.received.option import option
+from iqoptionapi.ws.received.option_closed import option_closed
+from iqoptionapi.ws.received.option_opened import option_opened
+from iqoptionapi.ws.received.order import order
+from iqoptionapi.ws.received.order_canceled import order_canceled
+from iqoptionapi.ws.received.order_placed_temp import order_placed_temp
+from iqoptionapi.ws.received.overnight_fee import overnight_fee
+from iqoptionapi.ws.received.position import position
+from iqoptionapi.ws.received.position_changed import position_changed
+from iqoptionapi.ws.received.position_closed import position_closed
+from iqoptionapi.ws.received.position_history import position_history
+from iqoptionapi.ws.received.positions import positions
+from iqoptionapi.ws.received.profile import profile
+from iqoptionapi.ws.received.result import result
+from iqoptionapi.ws.received.socket_option_closed import socket_option_closed
+from iqoptionapi.ws.received.socket_option_opened import socket_option_opened
+from iqoptionapi.ws.received.sold_options import sold_options
+from iqoptionapi.ws.received.strike_list import strike_list
+from iqoptionapi.ws.received.technical_indicators import technical_indicators
+from iqoptionapi.ws.received.time_sync import time_sync
+from iqoptionapi.ws.received.top_assets_updated import top_assets_updated
+from iqoptionapi.ws.received.tpsl_changed import tpsl_changed
+from iqoptionapi.ws.received.traders_mood_changed import traders_mood_changed
+from iqoptionapi.ws.received.training_balance_reset import \
+    training_balance_reset
+from iqoptionapi.ws.received.underlying_list import underlying_list
 from iqoptionapi.ws.received.user_profile_client import user_profile_client
-from iqoptionapi.ws.received.leaderboard_userinfo_deals_client import leaderboard_userinfo_deals_client
-from iqoptionapi.ws.received.client_price_generated import client_price_generated
 from iqoptionapi.ws.received.users_availability import users_availability
 
 
@@ -99,7 +112,7 @@ class WebsocketClient(object):
                 del obj[k]
                 break
 
-    def on_message(self, message):  # pylint: disable=unused-argument
+    def on_message(self,wss, message):  # pylint: disable=unused-argument
         """Method to process websocket messages."""
         global_value.ssl_Mutual_exclusion = True
         logger = logging.getLogger(__name__)
@@ -176,6 +189,18 @@ class WebsocketClient(object):
         global_value.check_websocket_if_error = True
 
     @staticmethod
+    def on_open(wss):  # pylint: disable=unused-argument
+        """Method to process websocket open."""
+        logger = logging.getLogger(__name__)
+        logger.debug("Websocket client connected.")
+        global_value.check_websocket_if_connect = 1
+
+    @staticmethod
+    def on_close(wss):  # pylint: disable=unused-argument
+        """Method to process websocket close."""
+        logger = logging.getLogger(__name__)
+        logger.debug("Websocket connection closed.")
+        global_value.check_websocket_if_connect = 0
     def on_open(wss):  # pylint: disable=unused-argument
         """Method to process websocket open."""
         logger = logging.getLogger(__name__)
